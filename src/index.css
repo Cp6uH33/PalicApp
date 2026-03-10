@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+body {
+  background-color: #111827;
+  color: #f8fafc;
+}
+
+/* ========================================================
+   POPRAVKA IKONICE KALENDARA U TAMNOM MODU
+======================================================== */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+}
