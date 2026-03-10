@@ -32,8 +32,8 @@ function App() {
               {/* LOGOI (Ovo će sada biti na vrhu na mobilnom, ili levo na kompjuteru) */}
               <div className="flex items-center justify-center gap-4 w-full md:w-auto">
                 <Link to="/" className="flex items-center gap-4 hover:opacity-80 transition-opacity">
-                  <img src="/logo1.png" alt="Logo 1" className="h-12 w-auto object-contain drop-shadow-md" />
-                  <img src="/logo2.png" alt="Logo 2" className="h-12 w-auto object-contain drop-shadow-md" />
+                  <img src="/moj-logo1.png" alt="Logo 1" className="h-32 w-auto object-contain drop-shadow-md" />
+                  <img src="/moj-logo2.png" alt="Logo 2" className="h-32 w-auto object-contain drop-shadow-md" />
                 </Link>
               </div>
 
