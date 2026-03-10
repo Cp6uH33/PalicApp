@@ -86,7 +86,7 @@ const AdminPage = () => {
 
                     <form onSubmit={(e) => {
                         e.preventDefault();
-                        if (password === "palic2024") setIsAuthenticated(true);
+                        if (password === "palic2025") setIsAuthenticated(true);
                         else alert("Netačna šifra!");
                     }}>
                         <input
