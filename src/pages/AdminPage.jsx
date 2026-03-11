@@ -61,7 +61,7 @@ const AdminPage = () => {
             // 2. Slanje u n8n (ako je checkbox štikliran)
             if (sendToN8n) {
                 // VAZNO: Ovde ubaci svoj n8n Test URL 
-                const n8nWebhookUrl = "ZAMENI_OVDE_SA_TVOJIM_N8N_URL"; 
+                const n8nWebhookUrl = "https://lakepalic.app.n8n.cloud/webhook-test/nova-rezervacija"; 
                 
                 await fetch(n8nWebhookUrl, {
                     method: 'POST',
