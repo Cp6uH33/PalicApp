@@ -13,6 +13,11 @@ const AdminPage = () => {
     const [city, setCity] = useState('');
     const [checkIn, setCheckIn] = useState('');
     const [checkOut, setCheckOut] = useState('');
+
+    // NOVO: Stanja za n8n i učitavanje
+    const [isLoading, setIsLoading] = useState(false);
+    const [sendToN8n, setSendToN8n] = useState(true);
+
     // FUNKCIJA ZA FORMATIRANJE DATUMA (Iz yyyy-mm-dd u dd.mm.yyyy)
     const formatDate = (dateString) => {
         if (!dateString) return '';
@@ -37,17 +42,41 @@ const AdminPage = () => {
         return () => unsubscribe();
     }, [isAuthenticated]);
 
+    // NOVO: Ažurirani handleSubmit sa n8n integracijom
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setIsLoading(true);
+
         try {
-            await addDoc(collection(db, "reservations"), {
+            const newReservation = {
                 name, phone, city, checkIn, checkOut,
                 source: "Booking/Ručno",
-                createdAt: new Date()
-            });
+                createdAt: new Date().toISOString()
+            };
+
+            // 1. Čuvanje u Firebase
+            await addDoc(collection(db, "reservations"), newReservation);
+
+            // 2. Slanje u n8n (ako je checkbox štikliran)
+            if (sendToN8n) {
+                // VAZNO: Ovde ubaci svoj n8n Test URL (ili Production URL kasnije)
+                const n8nWebhookUrl = "https://lakepalic.app.n8n.cloud/webhook-test/nova-rezervacija";
+
+                await fetch(n8nWebhookUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newReservation)
+                });
+            }
+
+            // 3. Čišćenje forme
             setName(''); setPhone(''); setCity(''); setCheckIn(''); setCheckOut('');
+            alert('Rezervacija uspešno sačuvana!');
         } catch (error) {
+            console.error("Greška:", error);
             alert('Došlo je do greške prilikom unosa.');
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -74,7 +103,6 @@ const AdminPage = () => {
     if (!isAuthenticated) {
         return (
             <div className="max-w-md mx-auto bg-gray-900/60 backdrop-blur-lg p-10 rounded-3xl shadow-2xl border border-white/10 text-center mt-16 relative overflow-hidden">
-                {/* Dekorativni sjaj u pozadini */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-palic-blue/20 rounded-full blur-[40px]"></div>
 
                 <div className="relative z-10">
@@ -150,8 +178,28 @@ const AdminPage = () => {
                         </div>
                     </div>
 
-                    <button type="submit" className="w-full bg-palic-blue/90 hover:bg-palic-blue text-white font-bold py-3.5 rounded-xl transition-all shadow-lg mt-6">
-                        Sačuvaj gosta
+                    {/* NOVO: Checkbox za n8n */}
+                    <div className="flex items-center gap-2 pt-2 pb-2">
+                        <input
+                            type="checkbox"
+                            id="sendToN8n"
+                            checked={sendToN8n}
+                            onChange={(e) => setSendToN8n(e.target.checked)}
+                            className="w-4 h-4 text-palic-blue bg-gray-950 border border-gray-700 rounded focus:ring-palic-blue focus:ring-2 cursor-pointer accent-palic-blue"
+                        />
+                        <label htmlFor="sendToN8n" className="text-sm text-gray-300 cursor-pointer select-none">
+                            Pokreni automatizaciju (n8n)
+                        </label>
+                    </div>
+
+                    {/* NOVO: Izmenjeno dugme sa Loading stanjem */}
+                    <button
+                        type="submit"
+                        disabled={isLoading}
+                        className={`w-full font-bold py-3.5 rounded-xl transition-all shadow-lg mt-4 
+                            ${isLoading ? 'bg-gray-600 cursor-not-allowed text-gray-300' : 'bg-palic-blue/90 hover:bg-palic-blue text-white'}`}
+                    >
+                        {isLoading ? 'Čuvanje i slanje...' : 'Sačuvaj gosta'}
                     </button>
                 </form>
             </div>
@@ -194,7 +242,6 @@ const AdminPage = () => {
                                         <div className="flex items-center gap-2 text-sm font-medium text-white">
                                             <Calendar className="w-4 h-4 text-palic-blue" />
                                             {formatDate(guest.checkIn)} — {formatDate(guest.checkOut)}
-
                                         </div>
                                     </div>
                                     <div className="text-xs text-right mt-1.5 text-gray-500 pr-1">
