@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../firebase';
-import { User, Phone, MapPin, Calendar, MessageCircle, Smartphone, Trash2, Lock } from 'lucide-react';
+import { User, Phone, MapPin, Calendar, MessageCircle, Smartphone, Trash2, Lock, DollarSign } from 'lucide-react';
 
 const AdminPage = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -11,10 +11,11 @@ const AdminPage = () => {
     const [name, setName] = useState('');
     const [phone, setPhone] = useState('');
     const [city, setCity] = useState('');
+    const [price, setPrice] = useState(''); // NOVO: Stanje za cenu
     const [checkIn, setCheckIn] = useState('');
     const [checkOut, setCheckOut] = useState('');
-
-    // NOVO: Stanja za n8n i učitavanje
+    
+    // Stanja za n8n i učitavanje
     const [isLoading, setIsLoading] = useState(false);
     const [sendToN8n, setSendToN8n] = useState(true);
 
@@ -28,7 +29,7 @@ const AdminPage = () => {
         return dateString;
     };
 
-    // Čitanje podataka
+    // Čitanje podataka iz Firebase-a
     useEffect(() => {
         if (!isAuthenticated) return;
         const q = query(collection(db, "reservations"), orderBy("checkIn", "asc"));
@@ -42,14 +43,14 @@ const AdminPage = () => {
         return () => unsubscribe();
     }, [isAuthenticated]);
 
-    // NOVO: Ažurirani handleSubmit sa n8n integracijom
+    // Ažurirani handleSubmit sa cenom i n8n integracijom
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsLoading(true);
 
         try {
             const newReservation = {
-                name, phone, city, checkIn, checkOut,
+                name, phone, city, checkIn, checkOut, price, // NOVO: Dodata 'price' u objekat
                 source: "Booking/Ručno",
                 createdAt: new Date().toISOString()
             };
@@ -59,9 +60,9 @@ const AdminPage = () => {
 
             // 2. Slanje u n8n (ako je checkbox štikliran)
             if (sendToN8n) {
-                // VAZNO: Ovde ubaci svoj n8n Test URL (ili Production URL kasnije)
-                const n8nWebhookUrl = "https://lakepalic.app.n8n.cloud/webhook-test/nova-rezervacija";
-
+                // VAZNO: Ovde ubaci svoj n8n Test URL 
+                const n8nWebhookUrl = "ZAMENI_OVDE_SA_TVOJIM_N8N_URL"; 
+                
                 await fetch(n8nWebhookUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -70,7 +71,7 @@ const AdminPage = () => {
             }
 
             // 3. Čišćenje forme
-            setName(''); setPhone(''); setCity(''); setCheckIn(''); setCheckOut('');
+            setName(''); setPhone(''); setCity(''); setCheckIn(''); setCheckOut(''); setPrice(''); // NOVO: Čišćenje cene
             alert('Rezervacija uspešno sačuvana!');
         } catch (error) {
             console.error("Greška:", error);
@@ -165,6 +166,13 @@ const AdminPage = () => {
                             className="w-full bg-gray-950/80 border border-gray-700 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-palic-blue" />
                     </div>
 
+                    {/* NOVO: Polje za cenu */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-1.5">Ukupna Cena</label>
+                        <input required type="number" value={price} onChange={(e) => setPrice(e.target.value)}
+                            className="w-full bg-gray-950/80 border border-gray-700 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-palic-blue" />
+                    </div>
+
                     <div className="grid grid-cols-2 gap-4 pt-2">
                         <div>
                             <label className="block text-sm font-medium text-gray-400 mb-1.5">Od</label>
@@ -178,23 +186,23 @@ const AdminPage = () => {
                         </div>
                     </div>
 
-                    {/* NOVO: Checkbox za n8n */}
+                    {/* Checkbox za n8n */}
                     <div className="flex items-center gap-2 pt-2 pb-2">
-                        <input
-                            type="checkbox"
-                            id="sendToN8n"
-                            checked={sendToN8n}
-                            onChange={(e) => setSendToN8n(e.target.checked)}
-                            className="w-4 h-4 text-palic-blue bg-gray-950 border border-gray-700 rounded focus:ring-palic-blue focus:ring-2 cursor-pointer accent-palic-blue"
+                        <input 
+                            type="checkbox" 
+                            id="sendToN8n" 
+                            checked={sendToN8n} 
+                            onChange={(e) => setSendToN8n(e.target.checked)} 
+                            className="w-4 h-4 text-palic-blue bg-gray-950 border border-gray-700 rounded focus:ring-palic-blue focus:ring-2 cursor-pointer accent-palic-blue" 
                         />
                         <label htmlFor="sendToN8n" className="text-sm text-gray-300 cursor-pointer select-none">
                             Pokreni automatizaciju (n8n)
                         </label>
                     </div>
 
-                    {/* NOVO: Izmenjeno dugme sa Loading stanjem */}
-                    <button
-                        type="submit"
+                    {/* Dugme sa Loading stanjem */}
+                    <button 
+                        type="submit" 
                         disabled={isLoading}
                         className={`w-full font-bold py-3.5 rounded-xl transition-all shadow-lg mt-4 
                             ${isLoading ? 'bg-gray-600 cursor-not-allowed text-gray-300' : 'bg-palic-blue/90 hover:bg-palic-blue text-white'}`}
@@ -231,7 +239,11 @@ const AdminPage = () => {
                                         <Phone className="w-3.5 h-3.5" /> {guest.phone}
                                     </div>
                                     <div className="text-sm text-gray-400 flex items-center gap-2">
-                                        <MapPin className="w-3.5 h-3.5" /> {guest.city}
+                                        <MapPin className="w-3.5 h-3.5" /> {guest.city} 
+                                        {/* NOVO: Prikaz cene na ekranu */}
+                                        <span className="ml-2 px-2 py-0.5 bg-green-500/10 text-green-400 rounded text-xs font-semibold">
+                                            {guest.price} RSD
+                                        </span>
                                     </div>
                                 </div>
 
