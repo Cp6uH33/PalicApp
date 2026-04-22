@@ -13,6 +13,7 @@ const AdminPage = () => {
     const [checkOut, setCheckOut] = useState('');
     
     const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState(null);
 
     // FUNKCIJA ZA FORMATIRANJE DATUMA (Iz yyyy-mm-dd u dd.mm.yyyy)
     const formatDate = (dateString) => {
@@ -33,6 +34,10 @@ const AdminPage = () => {
                 guestsArray.push({ id: doc.id, ...doc.data() });
             });
             setGuests(guestsArray);
+            setError(null);
+        }, (err) => {
+            console.error("Firestore greška:", err);
+            setError(err.message);
         });
         return () => unsubscribe();
     }, []);
@@ -152,7 +157,12 @@ const AdminPage = () => {
                     </span>
                 </div>
 
-                {guests.length === 0 ? (
+                {error ? (
+                    <div className="bg-red-900/40 backdrop-blur-lg p-10 rounded-3xl border border-red-500/30 text-center text-red-400">
+                        <p className="font-bold mb-2">Greška pri učitavanju podataka:</p>
+                        <p className="text-sm font-mono">{error}</p>
+                    </div>
+                ) : guests.length === 0 ? (
                     <div className="bg-gray-900/60 backdrop-blur-lg p-10 rounded-3xl border border-white/10 text-center text-gray-400">
                         Trenutno nemate unetih rezervacija.
                     </div>
