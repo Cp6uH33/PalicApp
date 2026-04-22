@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../firebase';
-import { Phone, MapPin, Calendar, MessageCircle, Smartphone, Trash2 } from 'lucide-react';
+import { Phone, MapPin, Calendar, MessageCircle, Smartphone, Trash2, Lock } from 'lucide-react';
 
 const AdminPage = () => {
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [password, setPassword] = useState('');
     const [guests, setGuests] = useState([]);
     const [name, setName] = useState('');
     const [phone, setPhone] = useState('');
@@ -27,6 +29,7 @@ const AdminPage = () => {
 
     // Čitanje podataka iz Firebase-a
     useEffect(() => {
+        if (!isAuthenticated) return;
         const q = query(collection(db, "reservations"), orderBy("checkIn", "asc"));
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const guestsArray = [];
@@ -40,7 +43,7 @@ const AdminPage = () => {
             setError(err.message);
         });
         return () => unsubscribe();
-    }, []);
+    }, [isAuthenticated]);
 
     // Ažurirani handleSubmit sa cenom i n8n integracijom
     const handleSubmit = async (e) => {
@@ -84,6 +87,37 @@ const AdminPage = () => {
         const cleanPhone = guestPhone.replace(/[^0-9]/g, '');
         return `viber://chat?number=${cleanPhone}`;
     };
+
+    if (!isAuthenticated) {
+        return (
+            <div className="max-w-md mx-auto bg-gray-900/60 backdrop-blur-lg p-10 rounded-3xl shadow-2xl border border-white/10 text-center mt-16 relative overflow-hidden">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-palic-blue/20 rounded-full blur-[40px]"></div>
+                <div className="relative z-10">
+                    <div className="w-20 h-20 bg-gray-950/80 border border-gray-800 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+                        <Lock className="w-8 h-8 text-palic-blue" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-white mb-2">Admin Pristup</h2>
+                    <p className="text-gray-400 mb-8">Unesite šifru za pristup rezervacijama</p>
+                    <form onSubmit={(e) => {
+                        e.preventDefault();
+                        if (password === "palic2025") setIsAuthenticated(true);
+                        else alert("Netačna šifra!");
+                    }}>
+                        <input
+                            type="password"
+                            placeholder="Unesite šifru"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            className="w-full bg-gray-950/80 border border-gray-700 text-white placeholder-gray-500 rounded-xl px-4 py-4 mb-6 focus:outline-none focus:border-palic-blue text-center text-lg tracking-widest"
+                        />
+                        <button type="submit" className="w-full bg-palic-blue hover:bg-palic-accent text-white font-bold py-4 rounded-xl transition shadow-lg hover:shadow-palic-blue/25">
+                            Pristupi Panelu
+                        </button>
+                    </form>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="grid lg:grid-cols-3 gap-8">
