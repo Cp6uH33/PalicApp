@@ -1,12 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../firebase';
-import { User, Phone, MapPin, Calendar, MessageCircle, Smartphone, Trash2, Lock, DollarSign } from 'lucide-react';
+import { Phone, MapPin, Calendar, MessageCircle, Smartphone, Trash2 } from 'lucide-react';
 
 const AdminPage = () => {
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [password, setPassword] = useState('');
-
     const [guests, setGuests] = useState([]);
     const [name, setName] = useState('');
     const [phone, setPhone] = useState('');
@@ -15,9 +12,7 @@ const AdminPage = () => {
     const [checkIn, setCheckIn] = useState('');
     const [checkOut, setCheckOut] = useState('');
     
-    // Stanja za n8n i učitavanje
     const [isLoading, setIsLoading] = useState(false);
-    const [sendToN8n, setSendToN8n] = useState(true);
 
     // FUNKCIJA ZA FORMATIRANJE DATUMA (Iz yyyy-mm-dd u dd.mm.yyyy)
     const formatDate = (dateString) => {
@@ -31,7 +26,6 @@ const AdminPage = () => {
 
     // Čitanje podataka iz Firebase-a
     useEffect(() => {
-        if (!isAuthenticated) return;
         const q = query(collection(db, "reservations"), orderBy("checkIn", "asc"));
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const guestsArray = [];
@@ -41,7 +35,7 @@ const AdminPage = () => {
             setGuests(guestsArray);
         });
         return () => unsubscribe();
-    }, [isAuthenticated]);
+    }, []);
 
     // Ažurirani handleSubmit sa cenom i n8n integracijom
     const handleSubmit = async (e) => {
@@ -58,19 +52,7 @@ const AdminPage = () => {
             // 1. Čuvanje u Firebase
             await addDoc(collection(db, "reservations"), newReservation);
 
-            // 2. Slanje u n8n (ako je checkbox štikliran)
-            if (sendToN8n) {
-                // VAZNO: Ovde ubaci svoj n8n Test URL 
-                const n8nWebhookUrl = "https://lakepalic.app.n8n.cloud/webhook-test/nova-rezervacija"; 
-                
-                await fetch(n8nWebhookUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(newReservation)
-                });
-            }
-
-            // 3. Čišćenje forme
+            // 2. Čišćenje forme
             setName(''); setPhone(''); setCity(''); setCheckIn(''); setCheckOut(''); setPrice(''); // NOVO: Čišćenje cene
             alert('Rezervacija uspešno sačuvana!');
         } catch (error) {
@@ -98,45 +80,6 @@ const AdminPage = () => {
         return `viber://chat?number=${cleanPhone}`;
     };
 
-    // ==========================================
-    // EKRAN ZA LOZINKU (Stakleni dizajn)
-    // ==========================================
-    if (!isAuthenticated) {
-        return (
-            <div className="max-w-md mx-auto bg-gray-900/60 backdrop-blur-lg p-10 rounded-3xl shadow-2xl border border-white/10 text-center mt-16 relative overflow-hidden">
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-palic-blue/20 rounded-full blur-[40px]"></div>
-
-                <div className="relative z-10">
-                    <div className="w-20 h-20 bg-gray-950/80 border border-gray-800 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
-                        <Lock className="w-8 h-8 text-palic-blue" />
-                    </div>
-                    <h2 className="text-2xl font-bold text-white mb-2">Admin Pristup</h2>
-                    <p className="text-gray-400 mb-8">Unesite šifru za pristup rezervacijama</p>
-
-                    <form onSubmit={(e) => {
-                        e.preventDefault();
-                        if (password === "palic2025") setIsAuthenticated(true);
-                        else alert("Netačna šifra!");
-                    }}>
-                        <input
-                            type="password"
-                            placeholder="Unesite šifru"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="w-full bg-gray-950/80 border border-gray-700 text-white placeholder-gray-500 rounded-xl px-4 py-4 mb-6 focus:outline-none focus:border-palic-blue text-center text-lg tracking-widest"
-                        />
-                        <button type="submit" className="w-full bg-palic-blue hover:bg-palic-accent text-white font-bold py-4 rounded-xl transition shadow-lg hover:shadow-palic-blue/25">
-                            Pristupi Panelu
-                        </button>
-                    </form>
-                </div>
-            </div>
-        );
-    }
-
-    // ==========================================
-    // GLAVNI ADMIN PANEL (Stakleni dizajn)
-    // ==========================================
     return (
         <div className="grid lg:grid-cols-3 gap-8">
 
@@ -184,20 +127,6 @@ const AdminPage = () => {
                             <input required type="date" value={checkOut} onChange={(e) => setCheckOut(e.target.value)}
                                 className="w-full bg-gray-950/80 border border-gray-700 text-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-palic-blue" />
                         </div>
-                    </div>
-
-                    {/* Checkbox za n8n */}
-                    <div className="flex items-center gap-2 pt-2 pb-2">
-                        <input 
-                            type="checkbox" 
-                            id="sendToN8n" 
-                            checked={sendToN8n} 
-                            onChange={(e) => setSendToN8n(e.target.checked)} 
-                            className="w-4 h-4 text-palic-blue bg-gray-950 border border-gray-700 rounded focus:ring-palic-blue focus:ring-2 cursor-pointer accent-palic-blue" 
-                        />
-                        <label htmlFor="sendToN8n" className="text-sm text-gray-300 cursor-pointer select-none">
-                            Pokreni automatizaciju (n8n)
-                        </label>
                     </div>
 
                     {/* Dugme sa Loading stanjem */}
