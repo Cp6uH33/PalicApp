@@ -21,11 +21,12 @@ function App() {
 
           {/* NAVIGACIJA - Sada je malo providna (Stakleni efekat) */}
                     {/* NAVIGACIJA - Poboljšan dizajn za sve ekrane */}
-          <nav className="border-b border-gray-800/50 p-4 mb-8 bg-gray-950/50 backdrop-blur-md sticky top-0 z-50">
+          <nav className="border-b border-gray-700/50 p-4 mb-8 bg-gray-950/80 backdrop-blur-md sticky top-0 z-50">
             <div className="max-w-6xl mx-auto flex justify-center">
-              <div className="flex items-center justify-center gap-4">
-                <img src="/moj-logo1.png" alt="Logo 1" className="h-24 w-auto object-contain drop-shadow-md" />
-                <img src="/moj-logo2.png" alt="Logo 2" className="h-24 w-auto object-contain drop-shadow-md" />
+              <div className="flex items-center justify-center gap-6">
+                <img src="/moj-logo1.png" alt="Logo 1" className="h-32 w-auto object-contain drop-shadow-[0_2px_8px_rgba(255,255,255,0.3)]" />
+                <div className="w-px h-16 bg-gray-600"></div>
+                <img src="/moj-logo2.png" alt="Logo 2" className="h-32 w-auto object-contain drop-shadow-[0_2px_8px_rgba(255,255,255,0.3)]" />
               </div>
             </div>
           </nav>
